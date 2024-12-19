@@ -35,7 +35,8 @@
                     <img src="{{.CatImage}}" alt="Random Cat" class="w-full h-full object-cover">
 
                     <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                        <button class="fav-btn bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
+                        <button onclick="window.location.reload()"
+                            class="fav-btn bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-heart text-2xl text-gray-600 hover:text-red-500"></i>
                         </button>
                         <div class="flex gap-2">
@@ -50,14 +51,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- <div class="p-4">
-                    <h2 class="text-xl font-bold mb-2">{{.CatBreedName}}</h2>
-                    <p class="mb-2"><strong>Origin:</strong> {{.CatBreedOrigin}}</p>
-                    <p class="mb-4"><strong>Description:</strong> {{.CatBreedDescription}}</p>
-                    <a href="{{.CatBreedURL}}" target="_blank" class="text-blue-500 hover:text-blue-700">Learn more
-                        about this breed</a>
-                </div> -->
             </div>
         </div>
 
@@ -79,18 +72,6 @@
                         <div id="slider-images" class="h-full">
                             <!-- Images will be dynamically added here -->
                         </div>
-
-                        <!-- Slider Controls -->
-                        <!-- <div class="absolute inset-0 flex items-center justify-between px-4">
-                            <button id="prev-slide"
-                                class="bg-white/80 rounded-full p-2 hover:bg-white transition-colors">
-                                <i class="fas fa-chevron-left text-xl text-gray-800"></i>
-                            </button>
-                            <button id="next-slide"
-                                class="bg-white/80 rounded-full p-2 hover:bg-white transition-colors">
-                                <i class="fas fa-chevron-right text-xl text-gray-800"></i>
-                            </button>
-                        </div> -->
 
                         <!-- Dots Navigation -->
                         <div id="slider-dots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
@@ -114,10 +95,20 @@
 
         <!-- Favs View -->
         <div id="favs-view" class="view-content hidden">
-            <div id="favorites-grid" class="grid grid-cols-2 gap-4">
-                <!-- Favorite images will be added here -->
+            <div id="favorites-container">
+                <div id="favorites-grid" class="grid grid-cols-2 gap-4">
+                </div>
+                <div id="no-favorites-message" class="hidden text-center">
+                    <p class="text-gray-600 text-lg mb-4">You have no favs, yet</p>
+                    <button onclick="showVotingView()"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        Vote Now
+                    </button>
+                </div>
             </div>
         </div>
+
+
     </div>
 
     <script src="../static/js/main.js">
