@@ -23,14 +23,15 @@ type CatResponse struct {
 		Name        string `json:"name"`
 		Origin      string `json:"origin"`
 		Description string `json:"description"`
-		URL         string `json:"cfa_url"`
+		URL         string `json:"wikipedia_url"`
 	} `json:"breeds"`
 }
 
 // ShowCat fetches and displays a random cat image.
 func (c *CatController) ShowCat() {
-	apiKey := "YOUR_API_KEY" // Replace with your actual API key
+	apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY" // Replace with your actual API key
 	url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?api_key=%s", apiKey)
+	// url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=beng&api_key=%s", apiKey)
 
 	// Make the HTTP request to fetch the cat image
 	resp, err := http.Get(url)
@@ -53,7 +54,7 @@ func (c *CatController) ShowCat() {
 	}
 
 	// Debug print the response data
-	fmt.Println("Cat API Response:", catResponse)  // Print the entire response to check the structure
+	// fmt.Println("Cat API Response:", catResponse)  // Print the entire response to check the structure
 
 	// Pass the cat image URL and breed info to the view
 	if len(catResponse) > 0 {

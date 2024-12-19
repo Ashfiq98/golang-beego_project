@@ -7,5 +7,5 @@ import (
 
 func init() {
     beego.Router("/", &controllers.MainController{})
-	beego.Router("/cat", &controllers.CatController{}, "get:ShowCat")
+	beego.Router("/", &controllers.CatController{}, "get:ShowCat")
 }
