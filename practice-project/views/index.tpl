@@ -18,10 +18,13 @@
                 <i class="fas fa-arrows-up-down mb-1"></i>
                 <span>Voting</span>
             </button>
-            <button class="nav-btn flex flex-col items-center text-gray-500 font-medium" data-view="breeds">
+            <!-- <a href="/breeds"> -->
+            <button class="nav-btn flex flex-col items-center text-gray-500 font-medium"
+                    data-view="breeds">
                 <i class="fas fa-search mb-1"></i>
                 <span>Breeds</span>
             </button>
+        <!-- </a> -->
             <button class="nav-btn flex flex-col items-center text-gray-500 font-medium" data-view="favs">
                 <i class="fas fa-heart mb-1"></i>
                 <span>Favs</span>
@@ -63,6 +66,7 @@
                 <datalist id="breeds-list">
                     <!-- Breed options will be added here -->
                 </datalist>
+
             </div>
 
             <div id="breed-info" class="hidden bg-white rounded-lg shadow-lg overflow-hidden">
@@ -89,6 +93,7 @@
                     <a id="wiki-link" href="#" target="_blank" class="text-red-500 uppercase text-sm font-medium">
                         Wikipedia
                     </a>
+
                 </div>
             </div>
         </div>
