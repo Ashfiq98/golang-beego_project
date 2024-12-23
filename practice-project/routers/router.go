@@ -11,7 +11,8 @@ func init() {
 	beego.Router("/", &controllers.CatController{}, "get:ShowCat", )
 	beego.Router("/breeds", &controllers.CatController{}, "get:GetBreedsHandler")
 	beego.Router("/breed-images", &controllers.CatController{}, "get:GetBreedImagesHandler")
-	beego.Router("/vote", &controllers.CatController{}, "post:VoteOnImage")
+	beego.Router("/breed-images/:breedID", &controllers.CatController{}, "get:FetchImagesByBreedHandler") // New dynamic route
+	// beego.Router("/vote", &controllers.CatController{}, "post:VoteOnImage")
 
 	// beego.Router("/breeds", &controllers.CatController{}, "get:ShowBreed")
 }

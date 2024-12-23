@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
-    "bytes"
+    // "bytes"
 	beego "github.com/beego/beego/v2/server/web"
 )
 
@@ -192,56 +192,35 @@ func (c *CatController) GetBreedImagesHandler() {
 	c.Data["json"] = allImages
 	c.ServeJSON()
 }
-func (c *CatController) VoteOnImage() {
-    // Parse the incoming vote data from the request body
-    var vote struct {
-        ImageID string `json:"image_id"`
-        SubID   string `json:"sub_id"`
-        Value   int    `json:"value"`
-    }
 
-    err := json.Unmarshal(c.Ctx.Input.RequestBody, &vote)
-    if err != nil {
-        c.Ctx.WriteString("Invalid request")
+// FetchImagesByBreedHandler handles requests to fetch images for a specific breed.
+func (c *CatController) FetchImagesByBreedHandler() {
+    once.Do(fetchAndStoreBreeds) // Ensure breeds are fetched only once
+
+    // Get breedID from the URL parameter
+    breedID := c.Ctx.Input.Param(":breedID")
+    if breedID == "" {
+        c.Data["json"] = map[string]string{"error": "Breed ID is required"}
+        c.ServeJSON()
         return
     }
 
-    // Construct the request body to send to the Cat API
-    voteRequest := map[string]interface{}{
-        "image_id": vote.ImageID,
-        "sub_id":   vote.SubID,
-        "value":    vote.Value,
+    // Create channels for fetching images
+    imageCh := make(chan []CatResponse)
+    errCh := make(chan error)
+
+    // Fetch images for the specific breed
+    go fetchImagesByBreed(breedID, imageCh, errCh)
+
+    // Wait for the result
+    select {
+    case images := <-imageCh:
+        c.Data["json"] = images
+    case err := <-errCh:
+        c.Data["json"] = map[string]string{"error": err.Error()}
     }
 
-    // Send the POST request to the Cat API
-    client := &http.Client{}
-    reqBody, err := json.Marshal(voteRequest)
-    if err != nil {
-        c.Ctx.WriteString("Error marshalling vote data")
-        return
-    }
-
-    req, err := http.NewRequest("POST", "https://api.thecatapi.com/v1/votes", bytes.NewBuffer(reqBody))
-    if err != nil {
-        c.Ctx.WriteString("Error creating vote request")
-        return
-    }
-	apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
-
-    req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("x-api-key", apiKey) // Replace with your API key
-
-    resp, err := client.Do(req)
-    if err != nil {
-        c.Ctx.WriteString("Error sending vote request")
-        return
-    }
-    defer resp.Body.Close()
-
-    // Handle the response and provide feedback to the user
-    if resp.StatusCode == http.StatusOK {
-        c.Ctx.WriteString("Vote submitted successfully!")
-    } else {
-        c.Ctx.WriteString("Failed to submit vote")
-    }
+    c.ServeJSON()
 }
+
+

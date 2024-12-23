@@ -58,6 +58,7 @@ document.getElementById('breed-search').addEventListener('input', function () {
 function updateImageSlider() {
     const slider = document.getElementById('slider-images');
     const dotsContainer = document.getElementById('slider-dots');
+    // console.log(currentImages[0]);
     if (currentImages.length === 0) return;
 
     // Update the main slider image
@@ -96,10 +97,12 @@ function resetAutoSlide() {
 
 // Fetch and display breed details and images
 function selectBreed(breed) {
-    fetch(`/breed-images`)
+    fetch(`/breed-images/${breed.id}`)
         .then(response => response.json())
         .then(data => {
+            console.log(data)
             currentImages = data.map(image => image.url);
+            // console.log("here....")
             currentImageIndex = 0;
             updateImageSlider();
             resetAutoSlide();
