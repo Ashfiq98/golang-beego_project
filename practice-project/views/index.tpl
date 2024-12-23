@@ -19,12 +19,11 @@
                 <span>Voting</span>
             </button>
             <!-- <a href="/breeds"> -->
-            <button class="nav-btn flex flex-col items-center text-gray-500 font-medium"
-                    data-view="breeds">
+            <button class="nav-btn flex flex-col items-center text-gray-500 font-medium" data-view="breeds">
                 <i class="fas fa-search mb-1"></i>
                 <span>Breeds</span>
             </button>
-        <!-- </a> -->
+            <!-- </a> -->
             <button class="nav-btn flex flex-col items-center text-gray-500 font-medium" data-view="favs">
                 <i class="fas fa-heart mb-1"></i>
                 <span>Favs</span>
@@ -35,7 +34,7 @@
         <div id="voting-view" class="view-content">
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div class="relative h-[500px] w-full">
-                    <img src="{{.CatImage}}" alt="Random Cat" class="w-full h-full object-cover">
+                    <img id="cat-image" src={{.CatImage}} alt="Random Cat" class="w-full h-full object-cover">
 
                     <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
                         <button onclick="window.location.reload()"
@@ -43,11 +42,11 @@
                             <i class="fas fa-heart text-2xl text-gray-600 hover:text-red-500"></i>
                         </button>
                         <div class="flex gap-2">
-                            <button onclick="window.location.reload()"
+                            <button id="upvote-btn" onclick="window.location.reload()"
                                 class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                                 <i class="fas fa-thumbs-up text-2xl text-gray-600 hover:text-green-500"></i>
                             </button>
-                            <button onclick="window.location.reload()"
+                            <button id="downvote-btn" onclick="window.location.reload()"
                                 class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                                 <i class="fas fa-thumbs-down text-2xl text-gray-600 hover:text-red-500"></i>
                             </button>
@@ -62,7 +61,7 @@
             <div class="relative mb-4">
                 <input type="text" id="breed-search" list="breeds-list"
                     class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Abyssinian">
+                    placeholder="select breed">
                 <datalist id="breeds-list">
                     <!-- Breed options will be added here -->
                 </datalist>

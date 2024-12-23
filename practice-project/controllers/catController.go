@@ -7,7 +7,8 @@ import (
 	"log"
 	"net/http"
 	"sync"
-    // "bytes"
+	"time"
+    "bytes"
 	beego "github.com/beego/beego/v2/server/web"
 )
 
@@ -45,59 +46,293 @@ var (
 	once   sync.Once
 )
 
-// ShowCat fetches and displays a random cat image using a Go channel.
-func (c *CatController) ShowCat() {
-	apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY" // Replace with your actual API key
-	url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?api_key=%s", apiKey)
-
-	responseChannel := make(chan []CatResponse)
-	errorChannel := make(chan error)
-
-	go func() {
-		resp, err := http.Get(url)
-		if err != nil {
-			errorChannel <- err
-			return
-		}
-		defer resp.Body.Close()
-
-		var catResponse []CatResponse
-		if err := json.NewDecoder(resp.Body).Decode(&catResponse); err != nil {
-			errorChannel <- err
-			return
-		}
-
-		responseChannel <- catResponse
-	}()
-
-	select {
-	case catResponse := <-responseChannel:
-		if len(catResponse) > 0 {
-			c.Data["CatImage"] = catResponse[0].URL
-			c.Data["CatID"] = catResponse[0].ID
-			c.Data["CatWidth"] = catResponse[0].Width
-			c.Data["CatHeight"] = catResponse[0].Height
-			if len(catResponse[0].Breeds) > 0 {
-				c.Data["CatBreedName"] = catResponse[0].Breeds[0].Name
-				c.Data["CatBreedOrigin"] = catResponse[0].Breeds[0].Origin
-				c.Data["CatBreedDescription"] = catResponse[0].Breeds[0].Description
-				c.Data["CatBreedURL"] = catResponse[0].Breeds[0].URL
-			} else {
-				c.Data["CatBreedName"] = "Unknown"
-			}
-		} else {
-			c.Data["CatImage"] = "No image found"
-		}
-	case err := <-errorChannel:
-		c.Ctx.WriteString("Error fetching or parsing cat image response")
-		log.Println("Error:", err)
-		return
-	}
-
-	c.TplName = "index.tpl"
+// CatCache holds the image data in memory with a lock to ensure thread-safety
+var CatCache struct {
+    sync.Mutex
+    ImageData    *CatResponse
+    LastFetched  time.Time
 }
 
-// FetchBreeds fetches and stores cat breeds from the API.
+// ShowCat fetches and displays a cat image along with breed info
+func (c *CatController) ShowCat() {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY" // Replace with your actual API key
+    url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?api_key=%s", apiKey)
+
+    // Fetch data synchronously to ensure it completes before sending a response
+    resp, err := http.Get(url)
+    if err != nil {
+        log.Println("Error fetching cat data:", err)
+        c.Ctx.WriteString("Error fetching cat data")
+        return
+    }
+    defer resp.Body.Close()
+
+    var catResponse []CatResponse
+    if err := json.NewDecoder(resp.Body).Decode(&catResponse); err != nil {
+        log.Println("Error decoding cat data:", err)
+        c.Ctx.WriteString("Error decoding cat data")
+        return
+    }
+
+    // Store the fetched data in-memory (in CatCache)
+    CatCache.Lock()
+    if len(catResponse) > 0 {
+        CatCache.ImageData = &catResponse[0] // Store the first image in the cache
+        CatCache.LastFetched = time.Now()
+    }
+    CatCache.Unlock()
+
+    // Now we can send the image URL to the template
+    if len(catResponse) > 0 {
+        c.Data["CatImage"] = catResponse[0].URL
+    } else {
+        c.Data["CatImage"] = "No image found"
+    }
+
+    // Render the template
+    c.TplName = "index.tpl"
+}
+
+// API to get the stored data (for frontend to fetch)
+func (c *CatController) GetCatData() {
+    // Ensure data is available in CatCache
+    CatCache.Lock()
+    if CatCache.ImageData != nil {
+        c.Data["json"] = []CatResponse{*CatCache.ImageData}
+    } else {
+        c.Data["json"] = []string{"No cat data available"}
+    }
+    CatCache.Unlock()
+
+    // Serve the JSON data
+    c.ServeJSON()
+}
+
+
+// VOTING
+type VoteRequest struct {
+	ImageID string `json:"image_id"`
+	SubID   string `json:"sub_id"`
+	Value   int    `json:"value"` // 1 for upvote, 0 for downvote
+}
+
+type VoteResponse struct {
+	ID      int    `json:"id"`
+	Message string `json:"message"`
+}
+
+// VoteUp handles upvoting a cat image.
+const subID = "test123" // Use a fixed sub_id for testing
+
+func (c *CatController) VoteUp() {
+    imageID := c.GetString("image_id")
+    if imageID == "" {
+        c.Data["json"] = map[string]string{"error": "Image ID is required"}
+        c.ServeJSON()
+        return
+    }
+
+    // Fetch the current vote state for the given image ID
+    currentVote, err := getCurrentVote(imageID, subID)
+    if err != nil {
+        c.Data["json"] = map[string]string{"error": "Failed to get current vote"}
+        c.ServeJSON()
+        return
+    }
+
+    // Determine the new vote value (toggle between 1 and 0)
+    var newVoteValue int
+    if currentVote == 1 {
+        newVoteValue = 0 // If it's already upvoted, remove the vote (set to 0)
+    } else {
+        newVoteValue = 1 // Otherwise, upvote (set to 1)
+    }
+
+    // Create a new vote request with the toggled value
+    vote := VoteRequest{
+        ImageID: imageID,
+        SubID:   subID,
+        Value:   newVoteValue,
+    }
+
+    // Send the updated vote
+    err = sendVote("live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY", vote)
+    if err != nil {
+        c.Data["json"] = map[string]string{"error": err.Error()}
+        c.ServeJSON()
+        return
+    }
+
+    c.Data["json"] = map[string]string{"message": "Vote toggled successfully"}
+    c.ServeJSON()
+}
+
+func (c *CatController) VoteDown() {
+    imageID := c.GetString("image_id")
+    if imageID == "" {
+        c.Data["json"] = map[string]string{"error": "Image ID is required"}
+        c.ServeJSON()
+        return
+    }
+
+    // Fetch the current vote state for the given image ID
+    currentVote, err := getCurrentVote(imageID, subID)
+    if err != nil {
+        c.Data["json"] = map[string]string{"error": "Failed to get current vote"}
+        c.ServeJSON()
+        return
+    }
+
+    // Determine the new vote value (toggle between -1 and 0)
+    var newVoteValue int
+    if currentVote == -1 {
+        newVoteValue = 0 // If it's already downvoted, remove the vote (set to 0)
+    } else {
+        newVoteValue = -1 // Otherwise, downvote (set to -1)
+    }
+
+    // Create a new vote request with the toggled value
+    vote := VoteRequest{
+        ImageID: imageID,
+        SubID:   subID,
+        Value:   newVoteValue,
+    }
+
+    // Send the updated vote
+    err = sendVote("live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY", vote)
+    if err != nil {
+        c.Data["json"] = map[string]string{"error": err.Error()}
+        c.ServeJSON()
+        return
+    }
+
+    c.Data["json"] = map[string]string{"message": "Vote toggled successfully"}
+    c.ServeJSON()
+}
+
+// Helper function to get the current vote state for an image
+func getCurrentVote(imageID, subID string) (int, error) {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    url := fmt.Sprintf("https://api.thecatapi.com/v1/votes?sub_id=%s", subID)
+
+    req, _ := http.NewRequest("GET", url, nil)
+    req.Header.Set("x-api-key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return 0, fmt.Errorf("failed to fetch vote history: %v", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return 0, fmt.Errorf("failed to fetch vote history: %v", resp.Status)
+    }
+
+    var votes []VoteHistoryResponse
+    if err := json.NewDecoder(resp.Body).Decode(&votes); err != nil {
+        return 0, fmt.Errorf("failed to decode vote history response: %v", err)
+    }
+
+    // Check if there's a vote for this imageID
+    for _, vote := range votes {
+        if vote.ImageID == imageID {
+            return vote.Value, nil
+        }
+    }
+
+    // If no previous vote is found, return 0 (no vote)
+    return 0, nil
+}
+
+type VoteHistoryResponse struct {
+    ID        int       `json:"id"`
+    ImageID   string    `json:"image_id"`
+    SubID     string    `json:"sub_id"`
+    CreatedAt time.Time `json:"created_at"`
+    Value     int       `json:"value"`
+    Image     struct {
+        ID  string `json:"id"`
+        URL string `json:"url"`
+    } `json:"image"`
+}
+
+func (c *CatController) VoteHistory() {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    url := fmt.Sprintf("https://api.thecatapi.com/v1/votes?sub_id=%s", subID) // Use fixed sub_id
+    
+    req, _ := http.NewRequest("GET", url, nil)
+    req.Header.Set("x-api-key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        c.Data["json"] = map[string]string{"error": err.Error()}
+        c.ServeJSON()
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        c.Data["json"] = map[string]string{"error": "Failed to fetch vote history"}
+        c.ServeJSON()
+        return
+    }
+
+    var votes []VoteHistoryResponse
+    if err := json.NewDecoder(resp.Body).Decode(&votes); err != nil {
+        c.Data["json"] = map[string]string{"error": "Failed to decode response"}
+        c.ServeJSON()
+        return
+    }
+
+    c.Data["json"] = votes
+    c.ServeJSON()
+}
+
+// VoteDown handles downvoting a cat image.
+
+// Helper to send a vote
+func sendVote(apiKey string, vote VoteRequest) error {
+	body, err := json.Marshal(vote)
+	if err != nil {
+		return fmt.Errorf("failed to marshal vote request: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.thecatapi.com/v1/votes", bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create vote request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send vote request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
+
+	return nil
+}
+
+// upVote 
+
+
+// downVote
+
+// delete vote
+
+
+
+
+// Breeds
+
 // FetchBreeds fetches and stores cat breeds from the API.
 func fetchBreeds(ch chan<- []Breed, errCh chan<- error) {
 	resp, err := http.Get("https://api.thecatapi.com/v1/breeds")

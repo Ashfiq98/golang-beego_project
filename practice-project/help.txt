@@ -1,0 +1,7 @@
+curl -X  DELETE "https://api.thecatapi.com/v1/votes/1238912" -H "x-api-key: live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0
+hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+
+curl -X POST http://localhost:8080/vote/down -d "image_id=jb&sub_id=test123"
+curl -X POST http://localhost:8080/vote/up -d "image_id=jb&sub_id=test123"
+
+curl -X GET "https://api.thecatapi.com/v1/votes?sub_id=test123" -H "x-api-key: live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"

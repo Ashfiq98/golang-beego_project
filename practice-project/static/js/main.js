@@ -203,3 +203,122 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFavoritesView();
 });
 
+
+document.addEventListener("DOMContentLoaded", function () {
+    const subId = "test123";  // Your static sub_id value
+
+    // Function to fetch cat data and get the image_id
+    async function getCatData() {
+        try {
+            const response = await fetch('/getcatdata');
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data)
+                const imageId = data[0].id;  // Assuming `image_id` is in the response
+                console.log(imageId)
+                // const catImageElement = document.getElementById('cat-image');
+                // catImageElement.src = data.catImage || 'default-image.jpg';  // Fallback image
+                return imageId;
+            } else {
+                console.error('Failed to fetch cat data');
+            }
+        } catch (error) {
+            console.error('Error fetching cat data:', error);
+        }
+    }
+
+    // Function to handle upvote
+    async function voteUp(imageId) {
+        try {
+            const response = await fetch('/vote/up', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `image_id=${imageId}&sub_id=${subId}`,
+            });
+
+            if (response.ok) {
+                console.log('Vote Up successful');
+                // After successful vote, update the vote history
+                getVoteHistory();
+            } else {
+                console.error('Failed to vote up');
+            }
+        } catch (error) {
+            console.error('Error voting up:', error);
+        }
+    }
+
+    // Function to handle downvote
+    async function voteDown(imageId) {
+        try {
+            const response = await fetch('vote/down', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `image_id=${imageId}&sub_id=${subId}`,
+            });
+
+            if (response.ok) {
+                console.log('Vote Down successful');
+                // After successful vote, update the vote history
+                getVoteHistory();
+            } else {
+                console.error('Failed to vote down');
+            }
+        } catch (error) {
+            console.error('Error voting down:', error);
+        }
+    }
+
+    // Function to fetch and log vote history
+    async function getVoteHistory() {
+        try {
+            const response = await fetch(`https://api.thecatapi.com/v1/votes?sub_id=${subId}`, {
+                headers: {
+                    'x-api-key': 'live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY',  // Replace with your actual API key
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Vote history:', data);
+
+                // Check if history is returned in the expected format
+                if (Array.isArray(data) && data.length > 0) {
+                    // Log the vote history or process it as needed
+                    data.forEach(vote => {
+                        console.log('Vote:', vote);
+                        // Here, you could update the UI if you want to show the history
+                    });
+                } else {
+                    console.log('No votes found in history');
+                }
+            } else {
+                console.error('Failed to fetch vote history');
+            }
+        } catch (error) {
+            console.error('Error fetching vote history:', error);
+        }
+    }
+
+    // Bind events to upvote and downvote buttons
+    document.getElementById('upvote-btn').addEventListener('click', function (event) {
+        event.preventDefault();  // Prevent page reload
+        getCatData().then(imageId => {
+            voteUp(imageId);
+        });
+    });
+
+    document.getElementById('downvote-btn').addEventListener('click', function (event) {
+        event.preventDefault();  // Prevent page reload
+        getCatData().then(imageId => {
+            voteDown(imageId);
+        });
+    });
+
+    // Optionally, you can fetch and display the vote history when the page loads
+    getVoteHistory();
+});
