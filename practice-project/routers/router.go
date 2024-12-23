@@ -16,6 +16,10 @@ func init() {
 	beego.Router("/vote/up", &controllers.CatController{}, "post:VoteUp")
 	beego.Router("/vote/down", &controllers.CatController{}, "post:VoteDown")
 	beego.Router("/vote/history", &controllers.CatController{}, "get:VoteHistory")
+	beego.Router("/favourites", &controllers.CatController{}, "post:CreateFavourite") // Create a favorite
+    beego.Router("/favourites", &controllers.CatController{}, "get:GetFavourites")    // Get all favorites
+    beego.Router("/favourites/:favouriteId", &controllers.CatController{}, "delete:DeleteFavourite") // Delete a favorite
+
 	// beego.Router("/vote/history", &controllers.CatController{}, "delete:VoteHistory")
 
 	// beego.Router("/vote", &controllers.CatController{}, "post:VoteOnImage")

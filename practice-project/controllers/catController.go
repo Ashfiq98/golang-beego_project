@@ -458,4 +458,143 @@ func (c *CatController) FetchImagesByBreedHandler() {
     c.ServeJSON()
 }
 
+// FAVOURITES
+func (c *CatController) CreateFavourite() {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    
+    // Read the raw body from the request
+    body := c.Ctx.Input.RequestBody
+    fmt.Println("Raw Request Body:", string(body))  // Debugging log to see the incoming raw body
 
+    // Ensure body is not empty
+    if len(body) == 0 {
+        fmt.Println("Empty request body received")
+        c.CustomAbort(400, "Request body is empty")
+        return
+    }
+
+    var payload struct {
+        ImageID string `json:"image_id"`
+        SubID   string `json:"sub_id"`
+    }
+
+    // Unmarshal the raw body into the payload struct
+    if err := json.Unmarshal(body, &payload); err != nil {
+        fmt.Println("Error unmarshalling JSON: ", err) // Debugging log
+        c.CustomAbort(400, "Invalid JSON body")
+        return
+    }
+
+    fmt.Println("Received Payload: ", payload) // Debugging log
+
+    // Ensure image_id is provided
+    if payload.ImageID == "" {
+        c.CustomAbort(400, "image_id is required")
+        return
+    }
+
+    url := "https://api.thecatapi.com/v1/favourites"
+    requestBody := map[string]string{
+        "image_id": payload.ImageID,
+        "sub_id":   payload.SubID,
+    }
+
+    jsonPayload, err := json.Marshal(requestBody)
+    if err != nil {
+        fmt.Println("Error marshalling JSON: ", err) // Debugging log
+        c.CustomAbort(500, "Failed to prepare request payload")
+        return
+    }
+
+    // Making the request to the external API
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+    if err != nil {
+        c.CustomAbort(500, "Failed to create request")
+    }
+
+    req.Header.Set("x-api-key", apiKey)
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        c.CustomAbort(500, "Failed to make API request")
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+        body, _ := ioutil.ReadAll(resp.Body)
+        c.CustomAbort(resp.StatusCode, string(body))
+    }
+
+    c.Data["json"] = map[string]string{"message": "Favourite created successfully"}
+    c.ServeJSON()
+}
+
+
+func (c *CatController) GetFavourites() {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    subID := c.GetString("sub_id")
+
+    url := "https://api.thecatapi.com/v1/favourites"
+    if subID != "" {
+        url += "?sub_id=" + subID
+    }
+
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        c.CustomAbort(500, "Failed to create request")
+    }
+    req.Header.Set("x-api-key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        c.CustomAbort(500, "Failed to make API request")
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        c.CustomAbort(resp.StatusCode, string(body))
+    }
+
+    var favourites []map[string]interface{}
+    if err := json.NewDecoder(resp.Body).Decode(&favourites); err != nil {
+        c.CustomAbort(500, "Failed to parse response")
+    }
+
+    c.Data["json"] = favourites
+    c.ServeJSON()
+}
+
+func (c *CatController) DeleteFavourite() {
+    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    favouriteID := c.Ctx.Input.Param(":favouriteId")
+
+    if favouriteID == "" {
+        c.CustomAbort(400, "favouriteId is required")
+    }
+
+    url := "https://api.thecatapi.com/v1/favourites/" + favouriteID
+    req, err := http.NewRequest("DELETE", url, nil)
+    if err != nil {
+        c.CustomAbort(500, "Failed to create request")
+    }
+    req.Header.Set("x-api-key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        c.CustomAbort(500, "Failed to make API request")
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        body, _ := ioutil.ReadAll(resp.Body)
+        c.CustomAbort(resp.StatusCode, string(body))
+    }
+
+    c.Data["json"] = map[string]string{"message": "Favourite deleted successfully"}
+    c.ServeJSON()
+}
