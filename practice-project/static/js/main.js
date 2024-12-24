@@ -129,13 +129,13 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Favorites functionality
-function addToFavorites(imageUrl) {
-    if (!favorites.includes(imageUrl)) {
-        favorites.push(imageUrl);
-        localStorage.setItem('catFavorites', JSON.stringify(favorites));
-        updateFavoritesView();
-    }
-}
+// function addToFavorites(imageUrl) {
+//     if (!favorites.includes(imageUrl)) {
+//         favorites.push(imageUrl);
+//         localStorage.setItem('catFavorites', JSON.stringify(favorites));
+//         updateFavoritesView();
+//     }
+// }
 
 function updateFavoritesView() {
     const favoritesGrid = document.getElementById('favorites-grid');
@@ -184,9 +184,9 @@ $('.fav-btn').click(function () {
     const heartIcon = $(this).find('.fa-heart');
     heartIcon.toggleClass('text-red-500 text-gray-600');
 
-    if (currentImages.length > 0) {
-        addToFavorites(currentImages[currentImageIndex]);
-    }
+    // if (currentImages.length > 0) {
+    //     addToFavorites(currentImages[currentImageIndex]);
+    // }
 });
 
 // Thumbs up/down handlers
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch('/getcatdata');
             if (response.ok) {
                 const data = await response.json();
-                // console.log(data)
+                console.log(data)
                 // const imageId = data[0].id;  // Assuming `image_id` is in the response
                 // console.log(imageId)
                 // const catImageElement = document.getElementById('cat-image');
@@ -229,27 +229,29 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error('Error fetching cat data:', error);
         }
     }
-    async function addToFavourites(imageUrl) {
-        try {
-            // const fixedSubId = 'fixed_user_sub_id'; // Replace with your fixed sub_id
+    async function addToFavorites(imageId) {  // Change parameter name to reflect what it is
+        const subId = "test123";
+        const response = await fetch('/favourites', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Ensures the backend knows you're sending JSON
+            },
+            body: JSON.stringify({
+                image_id: imageId, // Data in key-value pairs
+                sub_id: subId,     // Your fixed sub_id
+            }),
+        });
+        
 
-            const response = await fetch('/favourites', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `image_url=${encodeURIComponent(imageUrl)}&sub_id=${encodeURIComponent(subId)}`,
-            });
+        const data = await response.json();
 
-            if (response.ok) {
-                console.log('Image added to favourites');
-            } else {
-                console.error('Failed to add image to favourites');
-            }
-        } catch (error) {
-            console.error('Error adding image to favourites:', error);
+        if (response.ok) {
+            console.log("Favourite created successfully:", data);
+        } else {
+            console.error("Failed to create favourite:", data);
         }
     }
+
 
     // Function to handle upvote
     async function voteUp(imageId) {
@@ -297,6 +299,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Function to fetch and log vote history
+    // async function getVoteHistory() {
+    //     try {
+    //         const response = await fetch(`https://api.thecatapi.com/v1/votes?sub_id=${subId}`, {
+    //             headers: {
+    //                 'x-api-key': 'live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY',  // Replace with your actual API key
+    //             },
+    //         });
+
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             console.log('Vote history:', data);
+
+    //             // Check if history is returned in the expected format
+    //             if (Array.isArray(data) && data.length > 0) {
+    //                 // Log the vote history or process it as needed
+    //                 data.forEach(vote => {
+    //                     console.log('Vote:', vote);
+    //                     // Here, you could update the UI if you want to show the history
+    //                 });
+    //             } else {
+    //                 console.log('No votes found in history');
+    //             }
+    //         } else {
+    //             console.error('Failed to fetch vote history');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching vote history:', error);
+    //     }
+    // }
+
     // Bind events to upvote and downvote buttons
     document.getElementById('upvote-btn').addEventListener('click', function (event) {
         event.preventDefault();  // Prevent page reload
@@ -314,8 +347,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('favourite-btn').addEventListener('click', function (event) {
         event.preventDefault();  // Prevent page reload
         console.log("Pressed favourite...")
-        getCatData('favourite').then(imageUrl => {
-            addToFavourites(imageUrl);  // Call the function to add the image to favourites
+        getCatData().then(imageId => {
+            addToFavorites(imageId);  // Call the function to add the image to favourites
+            // console.log(imageUrl);
         });
     });
     // Optionally, you can fetch and display the vote history when the page loads
