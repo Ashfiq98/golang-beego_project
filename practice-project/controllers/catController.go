@@ -459,57 +459,119 @@ func (c *CatController) FetchImagesByBreedHandler() {
 }
 
 // FAVOURITES
+// func (c *CatController) CreateFavourite() {
+//     apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    
+//     // Read body directly from the request
+//     bodyBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
+//     if err != nil {
+//         fmt.Println("Error reading body:", err)
+//         c.CustomAbort(400, "Error reading request body")
+//         return
+//     }
+    
+//     // Restore the body for any other middleware that might need it
+//     c.Ctx.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+    
+//     // Ensure body is not empty
+//     if len(bodyBytes) == 0 {
+//         fmt.Println("Empty request body received")
+//         c.CustomAbort(400, "Request body is empty")
+//         return
+//     }
+
+//     var payload struct {
+//         ImageID string `json:"image_id"`
+//         SubID   string `json:"sub_id"`
+//     }
+
+//     // Unmarshal using the body we read directly
+//     if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+//         fmt.Println("Error unmarshalling JSON:", err)
+//         c.CustomAbort(400, "Invalid JSON body")
+//         return
+//     }
+
+//     fmt.Println("Received Payload:", payload)
+
+//     // Ensure image_id is provided
+//     if payload.ImageID == "" {
+//         c.CustomAbort(400, "image_id is required")
+//         return
+//     }
+
+//     url := "https://api.thecatapi.com/v1/favourites"
+//     requestBody := map[string]string{
+//         "image_id": payload.ImageID,
+//         "sub_id":   payload.SubID,
+//     }
+
+//     jsonPayload, err := json.Marshal(requestBody)
+//     if err != nil {
+//         fmt.Println("Error marshalling JSON:", err)
+//         c.CustomAbort(500, "Failed to prepare request payload")
+//         return
+//     }
+
+//     req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+//     if err != nil {
+//         c.CustomAbort(500, "Failed to create request")
+//     }
+
+//     req.Header.Set("x-api-key", apiKey)
+//     req.Header.Set("Content-Type", "application/json")
+
+//     client := &http.Client{}
+//     resp, err := client.Do(req)
+//     if err != nil {
+//         c.CustomAbort(500, "Failed to make API request")
+//     }
+//     defer resp.Body.Close()
+
+//     if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+//         body, _ := ioutil.ReadAll(resp.Body)
+//         c.CustomAbort(resp.StatusCode, string(body))
+//     }
+
+//     c.Data["json"] = map[string]string{"message": "Favourite created successfully"}
+//     c.ServeJSON()
+// }
+
+// CreateFavourite: Store the image URL as a favourite
 func (c *CatController) CreateFavourite() {
     apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
     
-    // Read the raw body from the request
-    body := c.Ctx.Input.RequestBody
-    fmt.Println("Raw Request Body:", string(body))  // Debugging log to see the incoming raw body
+    // Parse the form data
+    imageUrl := c.GetString("image_url")
+    subID := c.GetString("sub_id")  // Use fixed sub_id here in the frontend
 
-    // Ensure body is not empty
-    if len(body) == 0 {
-        fmt.Println("Empty request body received")
-        c.CustomAbort(400, "Request body is empty")
+    // Ensure image_url is provided
+    if imageUrl == "" {
+        c.CustomAbort(400, "image_url is required")
         return
     }
 
-    var payload struct {
-        ImageID string `json:"image_id"`
-        SubID   string `json:"sub_id"`
-    }
+    // Log the received imageUrl and subID for debugging
+    fmt.Println("Received imageUrl:", imageUrl)
+    fmt.Println("Received subID:", subID)
 
-    // Unmarshal the raw body into the payload struct
-    if err := json.Unmarshal(body, &payload); err != nil {
-        fmt.Println("Error unmarshalling JSON: ", err) // Debugging log
-        c.CustomAbort(400, "Invalid JSON body")
-        return
-    }
-
-    fmt.Println("Received Payload: ", payload) // Debugging log
-
-    // Ensure image_id is provided
-    if payload.ImageID == "" {
-        c.CustomAbort(400, "image_id is required")
-        return
-    }
-
-    url := "https://api.thecatapi.com/v1/favourites"
+    // Prepare the data for the API request
     requestBody := map[string]string{
-        "image_id": payload.ImageID,
-        "sub_id":   payload.SubID,
+        "image_id": imageUrl,  // Use the image URL as the image_id
+        "sub_id":   subID,     // Use the fixed sub_id
     }
 
     jsonPayload, err := json.Marshal(requestBody)
     if err != nil {
-        fmt.Println("Error marshalling JSON: ", err) // Debugging log
         c.CustomAbort(500, "Failed to prepare request payload")
         return
     }
 
-    // Making the request to the external API
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+    // Send the API request to create the favourite
+    req, err := http.NewRequest("POST", "https://api.thecatapi.com/v1/favourites", bytes.NewBuffer(jsonPayload))
     if err != nil {
         c.CustomAbort(500, "Failed to create request")
+        return
     }
 
     req.Header.Set("x-api-key", apiKey)
@@ -519,17 +581,22 @@ func (c *CatController) CreateFavourite() {
     resp, err := client.Do(req)
     if err != nil {
         c.CustomAbort(500, "Failed to make API request")
+        return
     }
     defer resp.Body.Close()
 
     if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
         body, _ := ioutil.ReadAll(resp.Body)
+        fmt.Printf("Error: %s\n", body)
         c.CustomAbort(resp.StatusCode, string(body))
+        return
     }
 
+    // Success, return a success message
     c.Data["json"] = map[string]string{"message": "Favourite created successfully"}
     c.ServeJSON()
 }
+
 
 
 func (c *CatController) GetFavourites() {

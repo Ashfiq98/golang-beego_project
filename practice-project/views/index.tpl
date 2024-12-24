@@ -37,7 +37,7 @@
                     <img id="cat-image" src={{.CatImage}} alt="Random Cat" class="w-full h-full object-cover">
 
                     <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                        <button onclick="window.location.reload()"
+                        <button id="favourite-btn"
                             class="fav-btn bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-heart text-2xl text-gray-600 hover:text-red-500"></i>
                         </button>
