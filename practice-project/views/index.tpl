@@ -7,14 +7,21 @@
     <title>Cat Viewer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="../static/css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
 </head>
 
 <body class="bg-gray-100">
+
+    <div id="loader" class="loader hidden">
+        <div class="spinner"></div>
+    </div>
     <div class="max-w-2xl mx-auto p-4">
+
         <!-- Navigation Bar -->
         <nav class="mb-6 flex justify-center gap-8">
-            <button class="nav-btn flex flex-col items-center text-red-500 font-medium" data-view="voting">
+            <button class="nav-btn vote-nav flex flex-col items-center text-red-500 font-medium" data-view="voting">
                 <i class="fas fa-arrows-up-down mb-1"></i>
                 <span>Voting</span>
             </button>
@@ -37,17 +44,14 @@
                     <img id="cat-image" src={{.CatImage}} alt="Random Cat" class="w-full h-full object-cover">
 
                     <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                        <button id="favourite-btn" action="/favourites"
-                            class="fav-btn bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
+                        <button id="favourite-btn" onclick="window.location.reload()" class="fav-btn bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-heart text-2xl text-gray-600 hover:text-red-500"></i>
                         </button>
                         <div class="flex gap-2">
-                            <button id="upvote-btn" onclick="window.location.reload()"
-                                class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
+                            <button id="upvote-btn" onclick="window.location.reload()" class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                                 <i class="fas fa-thumbs-up text-2xl text-gray-600 hover:text-green-500"></i>
                             </button>
-                            <button id="downvote-btn" onclick="window.location.reload()"
-                                class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
+                            <button id="downvote-btn" onclick="window.location.reload()" class="bg-white rounded-full p-3 shadow-lg hover:bg-gray-100 transition-colors">
                                 <i class="fas fa-thumbs-down text-2xl text-gray-600 hover:text-red-500"></i>
                             </button>
                         </div>
@@ -59,9 +63,7 @@
         <!-- Breeds View -->
         <div id="breeds-view" class="view-content hidden">
             <div class="relative mb-4">
-                <input type="text" id="breed-search" list="breeds-list"
-                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="select breed">
+                <input type="text" id="breed-search" list="breeds-list" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="select breed">
                 <datalist id="breeds-list">
                     <!-- Breed options will be added here -->
                 </datalist>
@@ -97,15 +99,16 @@
             </div>
         </div>
 
-        <!-- Favs View -->
+        <!-- FAVS VIEW -->
+
         <div id="favs-view" class="view-content hidden">
-            <div id="favorites-container">
-                <div id="favorites-grid" class="grid grid-cols-2 gap-4">
+            <div id="favorites-container" class="max-w-2xl mx-auto">
+                <div id="favorites-grid" class="grid grid-cols-2 gap-6 p-4">
+                    <!-- Favorite items will be dynamically inserted here -->
                 </div>
-                <div id="no-favorites-message" class="hidden text-center">
+                <div id="no-favorites-message" class="hidden text-center py-8">
                     <p class="text-gray-600 text-lg mb-4">You have no favs, yet</p>
-                    <button onclick="showVotingView()"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <button class="nav-btn bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors" data-view="voting">
                         Vote Now
                     </button>
                 </div>
