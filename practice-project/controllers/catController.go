@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+    // "net/http/httptest"
+    // "testing"
 	"sync"
 	"time"
     "bytes"
@@ -465,7 +467,7 @@ func (c *CatController) CreateFavourite() {
     }
     
     // Log the raw request body
-    fmt.Println("Raw request body:", string(body))
+    // fmt.Println("Raw request body:", string(body))
     
     // Parse the JSON
     var requestData struct {
@@ -519,7 +521,7 @@ func (c *CatController) CreateFavourite() {
         return
     }
     
-    fmt.Println("API Response:", string(respBody))
+    // fmt.Println("API Response:", string(respBody))
     
     if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
         c.CustomAbort(resp.StatusCode, string(respBody))
