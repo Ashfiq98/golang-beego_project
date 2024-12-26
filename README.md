@@ -37,7 +37,7 @@ Key features include:
    ```
 
 ### Project Setup
-1. Clone the repository inside `src` of your go folder (if there is no `src` folder, create it):
+1. Clone the repository inside  `go/src` folder of your device  (if there is no `src` folder, create it):
    Clone it:
    ```
    git clone https://github.com/Ashfiq98/golang-beego_project.git
@@ -62,6 +62,12 @@ Key features include:
    go run main.go
    ```
 
+### Web Application URL
+Access the application at:
+```
+http://localhost:8080/
+```
+
 ### Running Tests
 Run unit tests to check functionality and code coverage:
 ```sh
@@ -75,11 +81,6 @@ go tool cover -html coverage.out
 
 
 
-### Web Application URL
-Access the application at:
-```
-http://localhost:8080/
-```
 
 ## Features
 
