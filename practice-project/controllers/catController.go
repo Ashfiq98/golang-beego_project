@@ -55,6 +55,7 @@ var CatCache struct {
 
 // ShowCat fetches and displays a cat image along with breed info
 func (c *CatController) ShowCat() {
+    // apiKey := web.AppConfig.String("api_key")
     apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY" // Replace with your actual API key
     url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?api_key=%s", apiKey)
 
