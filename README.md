@@ -1,5 +1,54 @@
 # Golang Beego Project - Cat Voting and Favourites
 
+## Setup Instructions
+
+### Prerequisites
+- Go 1.19 or higher installed.
+- Beego framework installed.
+- MySQL or SQLite (if using a database for additional persistence).
+
+### Beego Installation
+1. Install Beego:
+   ```
+   go get github.com/beego/beego/v2
+   ```
+
+2. Install Bee CLI tool (optional for development):
+   ```
+   go install github.com/beego/bee/v2@latest
+   ```
+
+### Project Setup
+1. Clone the repository:
+   ```
+   git clone https://github.com/Ashfiq98/golang-beego_project.git
+   cd golang-beego_project/practice-project
+   ```
+
+2. Install dependencies:
+   ```
+   go mod tidy
+   ```
+
+3. Configure `app.conf`:
+   - Add your API key for The Cat API.
+   - Configure other settings like port and database connection (if needed).
+
+4. Run the application:
+   ```
+   bee run
+   ```
+   or
+   ```
+   go run main.go
+   ```
+
+### Running Tests
+Run unit tests to check functionality and code coverage:
+```sh
+go test ./... -cover
+```
+
 ## Project Overview
 
 This project is a web application built using the [Beego](https://beego.vip/) framework and Go programming language. It implements a voting system for cat images, fetching data from [The Cat API](https://thecatapi.com). The frontend interactions are powered by a JavaScript library/framework or vanilla JS, as per preference.
@@ -67,55 +116,6 @@ http://localhost:8080/
 |-- go.sum                  # Go dependencies
 |-- help.txt                # Instructions for using the application
 |-- main.go                 # Main entry point of the application
-```
-
-## Setup Instructions
-
-### Prerequisites
-- Go 1.19 or higher installed.
-- Beego framework installed.
-- MySQL or SQLite (if using a database for additional persistence).
-
-### Beego Installation
-1. Install Beego:
-   ```
-   go get github.com/beego/beego/v2
-   ```
-
-2. Install Bee CLI tool (optional for development):
-   ```
-   go install github.com/beego/bee/v2@latest
-   ```
-
-### Project Setup
-1. Clone the repository:
-   ```
-   git clone https://github.com/Ashfiq98/golang-beego_project.git
-   cd golang-beego_project
-   ```
-
-2. Install dependencies:
-   ```
-   go mod tidy
-   ```
-
-3. Configure `app.conf`:
-   - Add your API key for The Cat API.
-   - Configure other settings like port and database connection (if needed).
-
-4. Run the application:
-   ```
-   bee run
-   ```
-   or
-   ```
-   go run main.go
-   ```
-
-### Running Tests
-Run unit tests to check functionality and code coverage:
-```sh
-go test ./... -cover
 ```
 
 ## How It Works
