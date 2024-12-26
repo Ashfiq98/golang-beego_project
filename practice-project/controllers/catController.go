@@ -6,12 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-    // "net/http/httptest"
-    // "testing"
 	"sync"
 	"time"
     "bytes"
-	beego "github.com/beego/beego/v2/server/web"
+	 beego "github.com/beego/beego/v2/server/web"
 )
 
 // CatController handles requests related to cats.
@@ -54,11 +52,42 @@ var CatCache struct {
     ImageData    *CatResponse
     LastFetched  time.Time
 }
+type FavouriteRequest struct {
+    ImageID string `json:"image_id"`
+    SubID   string `json:"sub_id"`
+}
+type VoteRequest struct {
+    ImageID string `json:"image_id"`
+    SubID   string `json:"sub_id"`
+    Value   int    `json:"value"` // 1 for upvote, 0 for downvote
+}
 
-// ShowCat fetches and displays a cat image along with breed info
+type VoteResponse struct {
+    ID      int    `json:"id"`
+    Message string `json:"message"`
+}
+type VoteHistoryResponse struct {
+    ID        int       `json:"id"`
+    ImageID   string    `json:"image_id"`
+    SubID     string    `json:"sub_id"`
+    CreatedAt time.Time `json:"created_at"`
+    Value     int       `json:"value"`
+    Image     struct {
+        ID  string `json:"id"`
+        URL string `json:"url"`
+        } `json:"image"`
+    }
+    
+var requestData struct {
+        ImageID string `json:"image_id"`
+        SubID   string `json:"sub_id"`
+    }
+    
+var APIBaseURL = "https://api.thecatapi.com/v1" // Default base URL
+
+// ShowCat fetches generate cats data with load 👇
 func (c *CatController) ShowCat() {
-    // apiKey := web.AppConfig.String("api_key")
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY" // Replace with your actual API key
+    apiKey, err := beego.AppConfig.String("api_key")
     url := fmt.Sprintf("https://api.thecatapi.com/v1/images/search?api_key=%s", apiKey)
 
     // Fetch data synchronously to ensure it completes before sending a response
@@ -110,24 +139,16 @@ func (c *CatController) GetCatData() {
     // Serve the JSON data
     c.ServeJSON()
 }
+// ShowCat fetches generate cats data with load 👆
 
 
-// VOTING
-type VoteRequest struct {
-	ImageID string `json:"image_id"`
-	SubID   string `json:"sub_id"`
-	Value   int    `json:"value"` // 1 for upvote, 0 for downvote
-}
-
-type VoteResponse struct {
-	ID      int    `json:"id"`
-	Message string `json:"message"`
-}
+// VOTING CODE : 👇
 
 // VoteUp handles upvoting a cat image.
 const subID = "test123" // Use a fixed sub_id for testing
 
 func (c *CatController) VoteUp() {
+    apiKey, err := beego.AppConfig.String("api_key")
     imageID := c.GetString("image_id")
     if imageID == "" {
         c.Data["json"] = map[string]string{"error": "Image ID is required"}
@@ -159,7 +180,7 @@ func (c *CatController) VoteUp() {
     }
 
     // Send the updated vote
-    err = sendVote("live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY", vote)
+    err = sendVote(apiKey, vote)
     if err != nil {
         c.Data["json"] = map[string]string{"error": err.Error()}
         c.ServeJSON()
@@ -172,6 +193,7 @@ func (c *CatController) VoteUp() {
 
 func (c *CatController) VoteDown() {
     imageID := c.GetString("image_id")
+    apiKey, err := beego.AppConfig.String("api_key")
     if imageID == "" {
         c.Data["json"] = map[string]string{"error": "Image ID is required"}
         c.ServeJSON()
@@ -202,7 +224,7 @@ func (c *CatController) VoteDown() {
     }
 
     // Send the updated vote
-    err = sendVote("live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY", vote)
+    err = sendVote(apiKey, vote)
     if err != nil {
         c.Data["json"] = map[string]string{"error": err.Error()}
         c.ServeJSON()
@@ -215,7 +237,7 @@ func (c *CatController) VoteDown() {
 
 // Helper function to get the current vote state for an image
 func getCurrentVote(imageID, subID string) (int, error) {
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    apiKey, err := beego.AppConfig.String("api_key")   
     url := fmt.Sprintf("https://api.thecatapi.com/v1/votes?sub_id=%s", subID)
 
     req, _ := http.NewRequest("GET", url, nil)
@@ -248,20 +270,9 @@ func getCurrentVote(imageID, subID string) (int, error) {
     return 0, nil
 }
 
-type VoteHistoryResponse struct {
-    ID        int       `json:"id"`
-    ImageID   string    `json:"image_id"`
-    SubID     string    `json:"sub_id"`
-    CreatedAt time.Time `json:"created_at"`
-    Value     int       `json:"value"`
-    Image     struct {
-        ID  string `json:"id"`
-        URL string `json:"url"`
-    } `json:"image"`
-}
 
 func (c *CatController) VoteHistory() {
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    apiKey, err := beego.AppConfig.String("api_key")
     url := fmt.Sprintf("https://api.thecatapi.com/v1/votes?sub_id=%s", subID) // Use fixed sub_id
     
     req, _ := http.NewRequest("GET", url, nil)
@@ -292,8 +303,7 @@ func (c *CatController) VoteHistory() {
     c.Data["json"] = votes
     c.ServeJSON()
 }
-
-// VoteDown handles downvoting a cat image.
+// VOTING CODE : 👆
 
 // Helper to send a vote
 func sendVote(apiKey string, vote VoteRequest) error {
@@ -324,6 +334,7 @@ func sendVote(apiKey string, vote VoteRequest) error {
 	return nil
 }
 
+//BREEDS CODE : 👇
 
 // FetchBreeds fetches and stores cat breeds from the API.
 func fetchBreeds(ch chan<- []Breed, errCh chan<- error) {
@@ -449,15 +460,14 @@ func (c *CatController) FetchImagesByBreedHandler() {
 
     c.ServeJSON()
 }
+//BREEDS CODE 👆
 
-type FavouriteRequest struct {
-    ImageID string `json:"image_id"`
-    SubID   string `json:"sub_id"`
-}
+
+/// FAVOURITES CODE 👇
+
 
 func (c *CatController) CreateFavourite() {
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
-    
+    apiKey, err := beego.AppConfig.String("api_key")    
     // Read the raw body first for debugging
     body, err := ioutil.ReadAll(c.Ctx.Request.Body)
     if err != nil {
@@ -470,10 +480,6 @@ func (c *CatController) CreateFavourite() {
     // fmt.Println("Raw request body:", string(body))
     
     // Parse the JSON
-    var requestData struct {
-        ImageID string `json:"image_id"`
-        SubID   string `json:"sub_id"`
-    }
     
     if err := json.Unmarshal(body, &requestData); err != nil {
         fmt.Println("Error parsing JSON:", err)
@@ -533,7 +539,7 @@ func (c *CatController) CreateFavourite() {
 }
 
 func (c *CatController) GetFavourites() {
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    apiKey, err := beego.AppConfig.String("api_key")
     subID := c.GetString("sub_id")
 
     url := "https://api.thecatapi.com/v1/favourites"
@@ -569,7 +575,7 @@ func (c *CatController) GetFavourites() {
 }
 
 func (c *CatController) DeleteFavourite() {
-    apiKey := "live_8Vq87uY7jXkcqmqwhODWVdzEp9iUzbog1G0hxJgh6gphgTP9sjK23Pbnir5Xl5JY"
+    apiKey, err := beego.AppConfig.String("api_key")
     favouriteID := c.Ctx.Input.Param(":favouriteId")
 
     if favouriteID == "" {
@@ -598,3 +604,4 @@ func (c *CatController) DeleteFavourite() {
     c.Data["json"] = map[string]string{"message": "Favourite deleted successfully"}
     c.ServeJSON()
 }
+/// FAVOURITES CODE 👆

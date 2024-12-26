@@ -9,5 +9,5 @@ curl -X GET "https://api.thecatapi.com/v1/votes?limit=3&sub_id=test123&order=DES
 
 go test -v ./tests
 go test -coverprofile coverage.out ./...
-go test -v ./tests/controllers -coverprofile=coverage.out
 go tool cover -html coverage.out
+go test -v ./tests/controllers -coverprofile=coverage.out
