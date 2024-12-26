@@ -1,12 +1,30 @@
 # Golang Beego Project - Cat Voting and Favourites
 
+## Project Overview
+
+This project is a web application built using the [Beego](https://beego.vip/) framework and Go programming language. It implements a voting system for cat images, fetching data from [The Cat API](https://thecatapi.com). The frontend interactions are powered by a JavaScript library/framework or vanilla JS, as per preference.
+
+Key features include:
+- Voting (upvote/downvote) functionality.
+- Marking and managing favourites.
+- Viewing vote history.
+- API integration for backend communication.
+
 ## Setup Instructions
 
 ### Prerequisites
 - Go 1.19 or higher installed.
 - Beego framework installed.
-- MySQL or SQLite (if using a database for additional persistence).
-
+### Setup path
+ - open terminal
+   - For bash
+ ```
+  nano ~/.bashrc
+ ```
+ - Add this in last line, then press `ctrl+o` and `Enter`
+ ```
+ export PATH=$PATH:/home/<your_device_name (ex:w3e57)>/go/bin
+ ```
 ### Beego Installation
 1. Install Beego:
    ```
@@ -19,7 +37,8 @@
    ```
 
 ### Project Setup
-1. Clone the repository:
+1. Clone the repository inside `src` of your go folder (if there is no `src` folder, create it):
+   Clone it:
    ```
    git clone https://github.com/Ashfiq98/golang-beego_project.git
    cd golang-beego_project/practice-project
@@ -46,24 +65,15 @@
 ### Running Tests
 Run unit tests to check functionality and code coverage:
 ```sh
-go test ./... -cover
+go test -v ./tests
+```
+- Code Coverage:
+```sh
+go test -coverprofile coverage.out ./... 
+go tool cover -html coverage.out
 ```
 
-## Project Overview
 
-This project is a web application built using the [Beego](https://beego.vip/) framework and Go programming language. It implements a voting system for cat images, fetching data from [The Cat API](https://thecatapi.com). The frontend interactions are powered by a JavaScript library/framework or vanilla JS, as per preference.
-
-Key features include:
-- Voting (upvote/downvote) functionality.
-- Marking and managing favourites.
-- Viewing vote history.
-- API integration for backend communication.
-
-### Project Repository
-Clone the project from the repository:
-```
-git clone https://github.com/Ashfiq98/golang-beego_project.git
-```
 
 ### Web Application URL
 Access the application at:
